@@ -1,0 +1,7 @@
+{
+  "name": "emit-epoch-stargrid",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
