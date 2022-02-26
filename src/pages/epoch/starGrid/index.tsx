@@ -1746,7 +1746,7 @@ class StarGrid extends React.Component<any, State>{
                         </IonFab>
                         <IonFab vertical="bottom" horizontal="end" slot="fixed">
                             <IonFabButton size="small" onClick={()=>{
-                                Plugins.Browser.open({url:"https://docs.emit.technology/emit-documents/emit-epoch/origin-universe/stargrid-scene/user-manual-of-stargrid"})
+                                window.open("https://docs.emit.technology/emit-documents/emit-epoch/origin-universe/stargrid-scene/user-manual-of-stargrid");
                             }}>
                                 <IonIcon icon={helpCircleOutline} />
                             </IonFabButton>
