@@ -52,20 +52,19 @@ import {
     arrowDownCircleOutline,
     arrowForwardCircleOutline,
     arrowUpCircleOutline,
-    cashOutline,
-    chevronBack,
-    expandOutline, helpCircleOutline,
+    expandOutline,
+    helpCircleOutline,
     homeOutline,
     listOutline,
     logOut,
     personAddOutline,
+    personCircleOutline,
     pricetagsOutline,
     remove,
     search,
 } from 'ionicons/icons';
 import './index.css';
 import starGridRpc from "../../../rpc/epoch/stargrid";
-import walletWorker from "../../../worker/walletWorker";
 import {
     AccountModel,
     ChainType,
@@ -75,22 +74,18 @@ import {
     ENDetails,
     Land,
     LockedInfo,
-    NftInfo,
     StarGridTrustInfo,
     StarGridType,
     Transaction,
     UserDeposit,
     UserPosition
 } from "../../../types";
-import url from "../../../utils/url";
 import EthToken from "../../../contract/erc20/eth";
 import * as config from "../../../config";
 import {CONTRACT_ADDRESS} from "../../../config";
 import * as utils from "../../../utils";
-// import ConfirmTransaction from "../../../components/ConfirmTransaction";
 import Erc721 from "../../../contract/erc721/meta/eth";
 import BigNumber from "bignumber.js";
-import rpc from "../../../rpc";
 import {epochStarGrid, epochStarGridOperator, epochStarGridQuery} from "../../../contract/epoch/bsc";
 import interVar, {interVarEpoch} from "../../../interval";
 import HexInfoCard from "./hex-info";
@@ -111,6 +106,8 @@ import {isEmptyPlanet} from "./utils";
 import i18n from "../../../locales/i18n";
 import {CountDown} from "../../../components/countdown";
 import {Plugins} from "@capacitor/core";
+import SelectAccount from "./SelectAccount";
+import {AccountInfo, IAccount, MetaMaskAccount} from "../../../account";
 
 interface ApproveState{
     bLIGHT:boolean
@@ -135,6 +132,7 @@ interface State{
     showLoading:boolean
     showConfirm:boolean
     showToast:boolean
+    toastColor?:string
     showInfo:boolean
     toastMessage?:string
     tx?:any
@@ -186,12 +184,20 @@ interface State{
     counterSelectData:Array<Counter>
 
     driver?:DriverStarGrid
+
+    metamaskProvider?:any
+    owner: string;
+
+    showSelectAccount: boolean
 }
 export const yellowColors = ["e8dda7","e8dda6","e8dca5","e7dca4","e7dba3","e7dba2","e6daa1","e6d99f","e5d99e","e5d89c","e4d79b","e4d799","e4d698","e3d696","e3d595","e3d594","e3d593","e3d492","e2d492","e2d391","e2d390","e2d290","e2d290","e2d190","e1d190","e1d090","e0d090","e0cf91","dfcf91","dfce92","decd92","decd93","ddcc93","dccb94","dccb94","dbca95","dac995","d9c896","d9c896","d8c796","d7c696","d7c596","d6c596","d6c496","d5c396","d5c396","d4c296","d4c295","d3c195","d3c194","d3c094","d2c093","d2bf93","d2bf92","d1be92","d1be91","d0bd91","d0bd90","d0bc90","cfbc8f","cfbb8f","cfbb8f","cebb8e","ceba8e","cdba8d","cdb98d","cdb98c","ccb98c","ccb88b","ccb88b","ccb78a","cbb78a","cbb789","cbb689","cbb688","cab588","cab587","cab487","c9b486","c9b386","c8b285","c8b285","c7b184","c7b184","c7b083","c6af82","c6af81","c5ae81","c5ad80","c5ad80","c5ac7f","c5ac7e","c5ab7e","c5ab7d","c5aa7d","c5aa7d","c5a97c","c5a97c","c5a87b","c5a87b","c5a87b","c5a77b","c5a77b","c5a67a","c5a67a","c5a67a","c5a679","c5a579","c5a578","c6a578","c6a578","c7a577","c7a577","c8a576","c8a476","c9a475","c9a475","caa474","caa373","caa373","cba372","cba272","cba271","cba171","cba170","cba06f","cba06e","ca9f6e","ca9e6d","ca9e6c","ca9d6b","c99c6b","c99b6a","c99a69","c89969","c89868","c89767","c79667","c79566","c69465","c59364","c59264","c49163","c39062","c28f61","c18e61","c08c60","be8b5f","bd8a5f","bc895e","bb885d","ba875d","b8855c","b7845c","b6835b","b4825b","b3815a","b1805a","b07f5a","ae7e59","ad7d59","ab7c59","aa7b58","a87a58","a77957","a57857","a37857","a27757","a07657","9e7557","9d7557","9b7457","9a7357","997357","977256","967156","957055","946f55","926f54","916e54","906c53","8f6b53","8e6a52","8c6952","8b6851","8a6750","886650","87654f","86644e","84634e","83624d","82614c","80604c","7f5f4b","7e5e4a","7c5d4a","7b5c49","7a5b48","795a48","785a47","775946","765846","755745","745745","745644","735644","735543","725543","725442","725442","725341","725341","725240","725240","72513f","72513f","73503e","734f3d","734f3d","744e3c","744d3b","754d3a","754c3a","754b39","764a38","764937","764936","764835","764735","764634","754633","754532","744432","734431","724331","714230","704230","6f412f","6e412f","6d402e","6b3f2e","6a3f2d","693e2c","683d2c","673d2b","663c2a","653b2a","653b29","643a28","633a28","633927","623926","623826","613725","613725","613724"];
 export const blueColors = ["c4cadc","c4cadb","c3c9db","c2c9da","c1c8da","c1c8da","c0c7d9","bec7d9","bdc6d9","bcc6d9","bbc5d9","b9c5d9","b8c4d9","b6c4d9","b5c3d9","b3c3d9","b2c2d9","b0c2d9","afc1d9","adc1d9","acc0d9","aac0d9","a9bfd9","a8bed9","a6bed9","a5bdd9","a4bdd9","a3bcd9","a2bbd9","a0bbd9","9fbad9","9ebad9","9dbad9","9bb9d9","9ab9d9","99b8d9","97b8d9","96b8d9","94b7d8","93b7d8","92b7d8","90b7d8","8fb7d8","8eb6d8","8db6d8","8bb5d8","8ab5d8","89b4d8","88b4d8","87b3d8","86b3d8","85b3d8","84b2d8","83b2d8","82b1d8","80b1d8","7fb0d8","7eb0d8","7dafd8","7cafd8","7baed8","7aaed8","78add8","77add8","76add8","74acd8","73acd8","72acd9","71abd9","70abd9","6fabd9","6eabd9","6dabd9","6caad9","6baad9","6aa9d9","69a9d8","69a9d8","68a8d8","67a8d8","66a7d8","65a7d8","65a7d8","64a6d8","63a6d8","62a6d8","61a5d8","60a5d8","5fa5d8","5ea4d8","5ea4d8","5da4d8","5ca4d8","5ca4d8","5ba3d8","5aa3d8","5aa2d8","59a2d8","58a2d8","58a1d8","57a1d8","56a0d8","56a0d8","55a0d8","549fd8","549fd8","539fd8","529ed8","519ed8","519ed8","509ed8","4f9ed8","4f9dd8","4e9dd8","4e9dd8","4d9cd8","4d9cd8","4c9bd8","4c9bd8","4b9bd8","4b9ad8","4b9ad8","4a9ad8","4a99d8","4999d8","4999d8","4998d8","4898d8","4797d8","4797d8","4696d8","4696d8","4596d8","4496d8","4495d8","4395d8","4394d8","4294d8","4293d8","4293d8","4192d8","4191d8","4091d8","3f90d8","3f8fd8","3e8ed8","3e8dd8","3d8cd8","3c8bd8","3c8ad8","3b89d8","3a88d8","3a86d8","3985d8","3884d8","3782d8","3781d8","367fd8","357dd8","357bd8","3479d8","3377d8","3375d8","3273d8","3270d8","316ed8","316cd8","306bd8","2f69d8","2f67d9","2e66d9","2e64d9","2d62d9","2d61d9","2c60d9","2c5fd9","2c5ed9","2b5dd9","2b5cd9","2b5bd9","2b5ad9","2a5ad9","2a59d9","2a58d9","2958d9","2957d9","2957d9","2956d9","2856d9","2856d9","2855d9","2855d8","2754d8","2754d8","2754d8","2753d8","2653d8","2653d8","2652d8","2652d8","2552d8","2551d8","2551d8","2550d8","2450d8","244fd8","244fd8","244ed8","234ed8","234dd8","234dd8","224dd8","224cd8","224cd8","224cd8","214bd8","214bd8","214bd8","214bd8","204ad8","204ad8","204ad8","1f49d8","1f49d8","1e48d8","1e48d8","1d47d8","1d47d8","1c47d8","1c46d8","1b46d8","1b45d8","1b45d8","1a45d8","1a44d8","1944d8","1944d8","1843d8","1843d8","1743d8","1742d8","1642d8","1642d8","1542d8","1542d8","1441d8","1441d8","1341d8","1341d8","1240d8","1140d8","1140d8","1040d8","0f40d8","0f40d8","0e40d8"];
 const chain = ChainType.BSC;
 const centerHex = axialCoordinatesToCube(0x10000,-0x10000);
 const defaultHexSize = 3;
+
+let accountService:IAccount ;
+
 class StarGrid extends React.Component<any, State>{
 
     constructor(props: any) {
@@ -243,26 +249,68 @@ class StarGrid extends React.Component<any, State>{
         planetTab:"owner",
         showUserDeposit:false,
         showCounterSelectModal:false,
-        counterSelectData:[]
+        counterSelectData:[],
+        owner:selfStorage.getItem("owner"),
+        showSelectAccount: false
     }
     componentDidMount() {
+        const ptype = selfStorage.getItem("serviceType");
+        if(ptype == 2){
+            accountService = new MetaMaskAccount();
+        }
         interVarEpoch.start(()=>{
             interVar.latestOpTime = Date.now();
-            this.init().catch(e=>{
+            this.init().then(()=>{
+
+            }).catch(e=>{
                 console.error(e)
             })
         },5*1000,true)
 
         this.enterInit().catch(e=>{
-            console.error(e)
-        })
+            const err = typeof e == "string"?e:e.message;
+            this.setShowToast(true,err);
+        });
+
+    }
+
+    checkEvn = () =>{
+        //@ts-ignore
+        if (typeof window.ethereum !== 'undefined') {
+            console.log('MetaMask is installed!');
+            return true;
+        }
+        return false;
     }
 
     enterInit = async ()=>{
+        if(!accountService){
+            return
+        }
+
+        accountService.onAccountChanged((accounts:Array<AccountInfo>)=>{
+            this.handleAccountsChanged(accounts)
+            this.enterInit().catch(e=>{
+                console.error(e)
+            })
+        });
+
+        accountService.onChainChanged((chainId) => {
+            // Handle the new chain.
+            // Correctly handling chain changes can be complicated.
+            // We recommend reloading the page unless you have good reason not to.
+            if(chainId != 56){
+                this.setShowToast(true,"Please switch to BSC Network in the MetaMask !")
+                return;
+            }
+        });
+
         const {showApproveAllModal,approvedStarGridState,approvedStarGrid} = this.state;
+        const owner = await this.getOwnerAddress();
+
         let approveRest:Array<any> = [approvedStarGrid,approvedStarGridState,false];
         if(!showApproveAllModal){
-            approveRest = await this.queryApprove();
+            approveRest = await this.queryApprove(owner);
         }
         this.setState({
             approvedStarGrid:approveRest[0],
@@ -271,22 +319,54 @@ class StarGrid extends React.Component<any, State>{
         })
     }
 
+    getOwnerAddress = async ()=>{
+        const rest = await accountService.getAccounts();
+        if(!rest || rest.length == 0){
+            return ""
+        }
+        selfStorage.setItem("owner", rest[0].address);
+        return rest[0].address;
+    }
+
+    handleAccountsChanged = (accounts:Array<AccountInfo>) => {
+        const {owner} = this.state;
+        if (accounts.length === 0) {
+            // MetaMask is locked or the user has not connected any accounts
+            // console.log('Please connect to MetaMask.');
+            // this.setShowToast(true,"Please connect to MetaMask.")
+        } else if (accounts[0].address !== owner) {
+            selfStorage.setItem("owner", accounts[0]);
+            this.setState({
+                owner: accounts[0].address,
+                showLoading:true
+            })
+            this.init();
+            this.enterInit().then(()=>{
+                this.setShowLoading(false);
+            }).catch(e=>{
+                this.setShowLoading(false);
+            });
+            // Do any other work!
+        }
+    }
+
     init = async ()=>{
-        let {absoluteHex,hexSize} = this.state;
-        const account = await walletWorker.accountInfo();
-        const owner = account.addresses[chain];
+        let {absoluteHex,hexSize,owner,balanceMap} = this.state;
+
+        if(!owner || !accountService){
+            this.setShowSelectAccount(true)
+            return;
+        }
+        accountService.getChainId().then(chainId=>{
+             if(chainId != 56){
+                 this.setShowToast(true,"Please switch to BSC Network!")
+                 return;
+             }
+         }).catch(e=>{
+             console.error(e)
+        });
+
         const userPosition = await starGridRpc.userPositions(owner,10);
-        // const uMap:Map<string,boolean> = new Map<string, boolean>()
-        // if(userPosition ){
-        //     if(centerHex.equalHex(absoluteHex)){
-        //         absoluteHex = axialCoordinatesToCube(userPosition.recommendation.maxQ,userPosition.recommendation.maxS)
-        //     }
-        //     if(userPosition.positions && userPosition.positions.length>0){
-        //         if(centerHex.equalHex(absoluteHex)){
-        //             absoluteHex = toAxial(userPosition.positions[0].coordinate)
-        //         }
-        //     }
-        // }
         const rang = [(9-hexSize)*3,(9-hexSize)*3];
         const leftBottom = axialCoordinatesToCube(absoluteHex.x-rang[0],absoluteHex.z+rang[1]);
         const rightTop = axialCoordinatesToCube(absoluteHex.x+rang[0],absoluteHex.z-rang[1]);
@@ -295,43 +375,29 @@ class StarGrid extends React.Component<any, State>{
         const countersPromise =  this.getCounters()
         const enDetailsPromise = epochStarGridQuery.currentENDetails(owner);
         const rest = await Promise.all([rangeLandPromise,lockedInfoPromise,countersPromise,enDetailsPromise])
-
-        // const balance = await rpc.getBalance(chain,"");
-        // const rangeLands:Array<Land> = rest[0];
-        // const newTargetHex: Array<HexInfo> = [];
-        // if(targetHex && targetHex.length>0 && rangeLands && rangeLands.length>0){
-        //     for(let i=0;i<targetHex.length;i++){
-        //         const t = targetHex[i];
-        //         const rs = rangeLands.filter(v=> v.coordinate == toUINT256(t.hex));
-        //         let flag = false;
-        //         if(rs && rs.length>0){
-        //             const v = rs[0];
-        //             if(t.counter && (!v.counter || v.counter.counterId == "0") ||
-        //                 v.counter && (!t.counter || t.counter.counterId == "0") ||
-        //                 t.counter && v.counter && t.counter.counterId!= "0" && v.counter.counterId!="0"
-        //                 && t.counter.counterId != v.counter.counterId){
-        //                 flag = true
-        //             }
-        //         }
-        //         if(flag){
-        //             newTargetHex.push({hex:t.hex,counter:rs[0].counter,land:rs[0]})
-        //         }else{
-        //             newTargetHex.push(t)
-        //         }
-        //     }
-        // }
         this.setState({
             // absoluteHex:absoluteHex,
             rangeLand:rest[0],
             userPositions:userPosition,
-            account:account,
+            // owner:owner,
             counters:rest[2],
             lockedInfo:rest[1],
             recRange:rang,
-            // balanceMap:balance,
             // targetHex:newTargetHex,
-            enDetails: rest[3]
+            enDetails: rest[3],
         })
+        if(!balanceMap){
+            this.getBalanceAsync().then((balanceMap)=>{
+                this.setState({
+                    balanceMap:balanceMap,
+                })
+            }).catch(e=>{
+                console.error(e)
+            });
+        }
+
+
+
     }
 
     getBalance = (cy:string,fix:number = 3) => {
@@ -342,38 +408,53 @@ class StarGrid extends React.Component<any, State>{
        return 0
     }
 
+    getBalanceAsync = async (): Promise<any> => {
+        const {owner,approvedStarGridState} = this.state;
+        const keys = Object.keys(approvedStarGridState);
+        const balanceMap = {};
+        for(let cy of keys){
+            const token = new EthToken(CONTRACT_ADDRESS.ERC20.BSC[cy],ChainType.BSC)
+            balanceMap[cy] = await token.balanceOf(owner);
+        }
+        return balanceMap;
+    }
+
+    startApp(provider) {
+        // If the provider returned by detectEthereumProvider is not the same as
+        // window.ethereum, something is overwriting it, perhaps another wallet.
+        if (provider !== window.ethereum) {
+            console.error('Do you have multiple wallets installed?');
+        }
+    }
+
     getCounters = async (type?:StarGridType)=>{
-        const account = await walletWorker.accountInfo();
-        // const nfts = await rpc.getTicket(chain,"")
+        const {owner} = this.state;
+        const ticket = new Erc721(CONTRACT_ADDRESS.ERC721.COUNTER.ADDRESS.BSC,ChainType.BSC);
+        const balance = await ticket.balanceOf(owner)
         const counters:Array<Counter> = [];
-        // if(nfts){
-        //     const infos:Array<NftInfo> = nfts[CONTRACT_ADDRESS.ERC721.COUNTER.SYMBOL.BSC];
-        //     if(!infos || infos.length==0){
-        //         return counters
-        //     }
-        //     for(let info of infos){
-        //         const counter = await starGridRpc.counterInfo(info.tokenId)
-        //         if(!counter || type && type != counter.enType){
-        //             continue
-        //         }
-        //             // await epochStarGridQuery.counterInfo(info.tokenId,account.addresses[chain])//await starGridRpc.counterInfo(info.tokenId)
-        //         counters.push(counter)
-        //     }
-        // }
+        for (let i = 0; i < balance; i++) {
+            const tokenId = await ticket.tokenOfOwnerByIndex(owner, i);
+            const counter = await starGridRpc.counterInfo(tokenId)
+            if(!counter || type && type != counter.enType){
+                continue
+            }
+            counters.push(counter)
+        }
         return counters
     }
 
-    queryApprove = async ()=>{
+    queryApprove = async (own?:string)=>{
         try{
-            const {approvedStarGridState} = this.state;
+            const {approvedStarGridState,owner} = this.state;
+            if(!own){
+                own = owner
+            }
             const keys = Object.keys(approvedStarGridState);
-            const account = await walletWorker.accountInfo();
             let approved = true;
-            const owner = account.addresses[chain];
             for(let cy of keys){
                 const token: EthToken = new EthToken(config.CONTRACT_ADDRESS.ERC20.BSC[cy], chain);
                 {
-                    const rest: any = await token.allowance(owner, config.CONTRACT_ADDRESS.EPOCH.BSC.SAFE_HOLDER);
+                    const rest: any = await token.allowance(own, config.CONTRACT_ADDRESS.EPOCH.BSC.SAFE_HOLDER);
                     const allowance = utils.fromValue(rest, utils.getCyDecimal(cy, ChainType[chain])).toNumber();
                     if(allowance>0){
                         approvedStarGridState[cy]=true
@@ -381,7 +462,7 @@ class StarGrid extends React.Component<any, State>{
                 }
             }
             const contract: Erc721 = new Erc721(config.CONTRACT_ADDRESS.ERC721.COUNTER.ADDRESS.BSC,chain);
-            const approveAll = await contract.isApprovedForAll(owner,config.CONTRACT_ADDRESS.EPOCH.BSC.SAFE_HOLDER)
+            const approveAll = await contract.isApprovedForAll(own,config.CONTRACT_ADDRESS.EPOCH.BSC.SAFE_HOLDER)
             for(let cy of keys){
                 if(!approvedStarGridState[cy]){
                     approved = false
@@ -397,8 +478,7 @@ class StarGrid extends React.Component<any, State>{
     }
 
     genTx = async (contract:EthContract,data:string) =>{
-        const account = await walletWorker.accountInfo();
-        const owner = account.addresses[chain]
+        const {owner} = this.state;
         const tx: Transaction = {
             from: owner,
             to: contract.address ,
@@ -416,34 +496,42 @@ class StarGrid extends React.Component<any, State>{
     }
 
     genApproveTx = async (cy?:string,spender?:string)=>{
-
+        let tx:Transaction;
         if(cy&&spender){
             const contractAddress = config.CONTRACT_ADDRESS.ERC20.BSC[cy];
             const token: EthToken = new EthToken(contractAddress, chain);
             const data = await token.approve(spender,utils.toValue(1e18,18));
-            return await this.genTx(token,data);
+            tx = await this.genTx(token,data);
         }else{
             const contractAddress = config.CONTRACT_ADDRESS.ERC721.COUNTER.ADDRESS.BSC;
             const contract: Erc721 = new Erc721(contractAddress,chain);
             const data = await contract.setApprovalForAll(config.CONTRACT_ADDRESS.EPOCH.BSC.SAFE_HOLDER,true)
-            return await this.genTx(contract,data);
+            tx = await this.genTx(contract,data);
         }
+        tx.cy = cy;
+        return tx;
     }
+
+    metaMaskReq = async (method:string,params:Array<any>) =>{
+       return await accountService.jsonRpc(method,params);
+    }
+
+    sendTx = async (tx:any)=>{
+       return await this.metaMaskReq("eth_sendTransaction",[tx]);
+    }
+
     approveToStarGridProxy = async (cy:string,spender:string)=>{
         const tx = await this.genApproveTx(cy,spender);
-        this.setState({
-            tx:tx,
-            showConfirm:true,
-        })
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
+        await this.queryApprove();
         interVarEpoch.latestOpTime = Date.now();
     }
     approveToStarGrid = async ()=>{
         const tx = await this.genApproveTx();
-        this.setState({
-            tx:tx,
-            showConfirm:true,
-        })
-
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
+        await this.queryApprove();
         interVarEpoch.latestOpTime = Date.now();
     }
 
@@ -474,34 +562,35 @@ class StarGrid extends React.Component<any, State>{
     commitApproveTxs = async ()=>{
         const {txs} = this.state;
         for(let tx of txs){
-            // const hash =  await rpc.commitTx(tx,"");
-            // await this.waitHash(hash)
+            const hash = await this.sendTx(tx);
+            await this.waitHash(hash)
+            this.setShowToast(true,`Approved to ${tx.cy?tx.cy:tx.to} successfully !`,"success",true)
             await this.queryApprove()
         }
         return Promise.resolve();
     }
 
     waitHash = async (hash:string)=>{
-        // rpc.getTxInfo(chain, hash).then(rest => {
-        //     if (rest) {
-        //         return Promise.resolve(true)
-        //     }else{
-        //         setTimeout(()=>{
-        //             this.waitHash(hash).catch(e=>{
-        //                 const err = typeof e == "string"?e:e.message;
-        //                 return Promise.reject(err)
-        //             });
-        //         },2*1000)
-        //     }
-        // }).catch((e: any) => {
-        //     const err = typeof e == "string"?e:e.message;
-        //     return Promise.reject(err)
-        // })
+        this.metaMaskReq("eth_getTransactionReceipt",[hash]).then(rest => {
+            if (rest) {
+                return Promise.resolve(true)
+            }else{
+                setTimeout(()=>{
+                    this.waitHash(hash).catch(e=>{
+                        const err = typeof e == "string"?e:e.message;
+                        return Promise.reject(err)
+                    });
+                },2*1000)
+            }
+        }).catch((e: any) => {
+            const err = typeof e == "string"?e:e.message;
+            return Promise.reject(err)
+        })
     }
 
     createConfirm = async (type:StarGridType,num:number,depositType:DepositType)=>{
-        const account = await walletWorker.accountInfo()
-        const rest = await epochStarGridOperator.estimateCreate(type,num,depositType,account.addresses[chain])
+        const {owner} = this.state;
+        const rest = await epochStarGridOperator.estimateCreate(type,num,depositType,owner)
         const maxCost = rest[2];
         const feeData:any = {
             "Counter Type": <b><IonText color="primary">EMIT-{StarGridType[type]}</IonText></b>,
@@ -530,8 +619,8 @@ class StarGrid extends React.Component<any, State>{
     }
 
     createEstimate = async (type:StarGridType,depositType:DepositType,num:number)=>{
-        const account = await walletWorker.accountInfo()
-        const rest = await epochStarGridOperator.estimateCreate(type,num,depositType,account.addresses[chain])
+        const {owner} = this.state;
+        const rest = await epochStarGridOperator.estimateCreate(type,num,depositType,owner)
         const maxCost = rest[2];
         this.setState({
            amountTitle1: <b><IonText color="secondary">{utils.nFormatter(utils.fromValue(rest[1],18),6)}</IonText>&nbsp;<small><IonText color="primary">{rest[0]}</IonText></small></b>,
@@ -546,16 +635,13 @@ class StarGrid extends React.Component<any, State>{
     create = async (type:StarGridType,num:number,depositType:DepositType,maxCost) =>{
         const data = await epochStarGridOperator.create(type,num,depositType,new BigNumber(maxCost),this.deadline())
         const tx = await this.genTx(epochStarGridOperator,data);
-        this.setState({
-            tx:tx,
-            showConfirm:true
-        })
-
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
         interVarEpoch.latestOpTime = Date.now();
     }
 
     captureConfirm = async (counterId:string,baseAmountIn:BigNumber,attachAmountIn:BigNumber)=>{
-        const {targetHex,counters,defaultPlanet} = this.state;
+        const {targetHex,counters,defaultPlanet,owner} = this.state;
         const counter = counters.filter((v)=> {
             if(v && v.counterId == counterId){
                 return v
@@ -566,7 +652,6 @@ class StarGrid extends React.Component<any, State>{
             return ;
         }
         attachAmountIn = new BigNumber(attachAmountIn);
-        const account = await walletWorker.accountInfo();
         let coo:Hex|undefined;
         if(targetHex.length == 1){
             coo = targetHex[0].hex
@@ -574,7 +659,7 @@ class StarGrid extends React.Component<any, State>{
         const defaultCoo = !isEmptyPlanet(defaultPlanet) ?defaultPlanet.coordinate:"0"
         const hex = toUINT256(coo)
         // @ts-ignore
-        const rest:Array<string> = await epochStarGrid.capture(counterId,hex,utils.toValue(baseAmountIn,18),utils.toValue(attachAmountIn,18),defaultCoo,account.addresses[ChainType.BSC])
+        const rest:Array<string> = await epochStarGrid.capture(counterId,hex,utils.toValue(baseAmountIn,18),utils.toValue(attachAmountIn,18),defaultCoo,owner)
         // const tx = await this.genTx(epochStarGrid,data)
         const base = counter[0].enType == StarGridType.EARTH ? "bDARK":"bLIGHT";
         const attach = counter[0].enType == StarGridType.EARTH ? "WATER":"EARTH"
@@ -639,51 +724,39 @@ class StarGrid extends React.Component<any, State>{
         const data:string = await epochStarGrid.capture(counterId,hex,utils.toValue(baseAmount,18),utils.toValue(attachAmount,18),defaultCoo)
         const tx = await this.genTx(epochStarGrid,data)
         this.setState({
-            tx:tx,
-            showConfirm:true,
             feeData: ""
         })
-
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
         interVarEpoch.latestOpTime = Date.now();
     }
 
     logout = async ()=>{
         const data = await epochStarGrid.logout()
         const tx = await this.genTx(epochStarGrid,data);
-
-        this.setState({
-            tx:tx,
-            showConfirm:true
-        })
-
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
         interVarEpoch.latestOpTime = Date.now();
     }
 
     settlement = async ()=>{
         const data = await epochStarGrid.settlement()
         const tx = await this.genTx(epochStarGrid,data);
-        this.setState({
-            tx:tx,
-            showConfirm:true
-        })
-
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
         interVarEpoch.latestOpTime = Date.now();
     }
 
     moveTo = async (hex:Hex) =>{
         const data = await epochStarGrid.moveTo(toUINT256(hex))
         const tx = await this.genTx(epochStarGrid,data);
-        this.setState({
-            tx:tx,
-            showConfirm:true
-        })
-
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
         interVarEpoch.latestOpTime = Date.now();
     }
 
     move = async (setTag:boolean,createPlanet:boolean)=>{
-        const {targetHex,lockedInfo} = this.state;
-        const account = await walletWorker.accountInfo()
+        const {targetHex,lockedInfo,owner} = this.state;
         if(targetHex.length == 0){
             this.setShowToast(true,"No step to move!")
             return
@@ -736,16 +809,16 @@ class StarGrid extends React.Component<any, State>{
         const opcode = toOpCode(routers,5);
         let rest;
         if(createPlanet){
-            rest = await epochStarGridQuery.estimateCreateCost(account.addresses[chain],lockedInfo.userInfo.counter.enType);
+            rest = await epochStarGridQuery.estimateCreateCost(owner,lockedInfo.userInfo.counter.enType);
         }else{
-            rest = await epochStarGrid.active("0x"+new BigNumber(opcode,2).toString(16),account.addresses[chain])
+            rest = await epochStarGrid.active("0x"+new BigNumber(opcode,2).toString(16),owner)
         }
         const baseAmount = utils.fromValue(rest[0],18);
         const attachAmount = utils.fromValue(rest[1],18);
         const feeRate = rest[2];
         let attackAddress:string|undefined = undefined;
         if(isAttack){
-            attackAddress = await epochStarGrid.userOfCounter(targetHex[targetHex.length-1].counter.counterId,account.addresses[chain])
+            attackAddress = await epochStarGrid.userOfCounter(targetHex[targetHex.length-1].counter.counterId,owner)
         }
 
         if(baseAmount.toNumber() == 0 && attachAmount.toNumber() == 0 ){
@@ -801,12 +874,8 @@ class StarGrid extends React.Component<any, State>{
                 tx.gas = "0x" + new BigNumber(tx.gas).plus(new BigNumber(logoutGas)).toString(16)
             }
         }
-
-        this.setState({
-            tx:tx,
-            showConfirm:true
-        })
-
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
         interVarEpoch.latestOpTime = Date.now();
     }
 
@@ -815,21 +884,17 @@ class StarGrid extends React.Component<any, State>{
         const defaultCoordinate = !isEmptyPlanet(defaultPlanet) ?defaultPlanet.coordinate:"0"
         const data:any = await epochStarGrid.prepare(utils.toValue(baseAmount,18),utils.toValue(attachAmount,18),terms,defaultCoordinate)
         const tx = await this.genTx(epochStarGrid,data)
-        this.setState({
-            tx:tx,
-            showConfirm:true
-        })
-
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
         interVarEpoch.latestOpTime = Date.now();
     }
 
     prepareConfirm = async (terms:number, a:BigNumber,b:BigNumber) =>{
-        const {lockedInfo,defaultPlanet} = this.state;
-        const account = await walletWorker.accountInfo();
+        const {lockedInfo,defaultPlanet,owner} = this.state;
         const baseAmount = new BigNumber(a);
         const attachAmount = new BigNumber(b)
         const defaultCoordinate = !isEmptyPlanet(defaultPlanet) ?defaultPlanet.coordinate:"0"
-        const rest:any = await epochStarGrid.prepare(utils.toValue(baseAmount,18),utils.toValue(attachAmount,18),terms,defaultCoordinate,account.addresses[ChainType.BSC])
+        const rest:any = await epochStarGrid.prepare(utils.toValue(baseAmount,18),utils.toValue(attachAmount,18),terms,defaultCoordinate,owner)
         let base;
         let attach;
         let availableBase:BigNumber;
@@ -887,16 +952,13 @@ class StarGrid extends React.Component<any, State>{
     setApproveToUser = async (addr:string,bool:boolean)=>{
         const data = await epochStarGrid.setApproval(addr,bool)
         const tx = await this.genTx(epochStarGrid,data)
-        this.setState({
-            tx:tx,
-            showConfirm:true
-        })
-
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
         interVarEpoch.latestOpTime = Date.now();
     }
 
     setShowSelectPlanet = async (f:boolean,methd:string) =>{
-        let {lockedInfo,defaultPlanet,method} = this.state;
+        let {lockedInfo,defaultPlanet,method,owner} = this.state;
         let enType = 0;
         if(lockedInfo.userInfo.counter.counterId != "0"){
             enType = lockedInfo.userInfo.counter.enType;
@@ -905,9 +967,8 @@ class StarGrid extends React.Component<any, State>{
         }
         let arr:Array<Land> = [];
         if(f){
-            const account = await walletWorker.accountInfo();
             //TODO pagination
-            arr = await starGridRpc.myPlanet(account.addresses[ChainType.BSC],1,new BigNumber(enType).toNumber(),0,500);
+            arr = await starGridRpc.myPlanet(owner,1,new BigNumber(enType).toNumber(),0,500);
         }
         if(methd){
             method = methd;
@@ -950,13 +1011,12 @@ class StarGrid extends React.Component<any, State>{
     }
 
     confirmWithdrawUserDeposit = async (counterId:string,v?:UserDeposit)=>{
-        const {withdrawUserDeposit} = this.state;
+        const {withdrawUserDeposit,owner} = this.state;
         if(!v){
             v = withdrawUserDeposit
         }
-        const account = await walletWorker.accountInfo();
         const deadline = this.deadline();
-        const estimateRest = await epochStarGridOperator.withDraw(v.index,counterId,new BigNumber(0),deadline,account.addresses[chain])
+        const estimateRest = await epochStarGridOperator.withDraw(v.index,counterId,new BigNumber(0),deadline,owner)
         const backedAmount = new BigNumber(estimateRest[1]).multipliedBy(1-0.005).toFixed(0);
 
         //baseCost,attachCost,feeRate
@@ -990,21 +1050,16 @@ class StarGrid extends React.Component<any, State>{
     withdrawUserDeposit = async (index:string,counterId:string,backedAmount:string,deadline:number)=>{
         const data = await epochStarGridOperator.withDraw(index,counterId,new BigNumber(backedAmount),deadline)
         const tx = await this.genTx(epochStarGridOperator,data)
-        this.setState({
-            tx:tx,
-            showConfirm:true
-        })
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
         interVarEpoch.latestOpTime = Date.now();
     }
 
     updateCounter = async (opcode:string)=>{
         const data = await epochStarGrid.updateCounter("0x"+new BigNumber(opcode,2).toString(16))
         const tx = await this.genTx(epochStarGrid,data)
-        this.setState({
-            tx:tx,
-            showConfirm:true
-        })
-
+        const hash = await this.sendTx(tx);
+        await this.confirm(hash)
         interVarEpoch.latestOpTime = Date.now();
     }
 
@@ -1126,9 +1181,8 @@ class StarGrid extends React.Component<any, State>{
     }
 
     selectTarget = async (f:boolean, hex?:HexInfo,x?:number,y?:number)=>{
-        let {lockedInfo,targetHex,rangeLand,absoluteHex} = this.state;
+        let {lockedInfo,targetHex,rangeLand,absoluteHex,owner} = this.state;
         if(hex){
-            const account = await walletWorker.accountInfo();
             const tHexes = this.setTarget(hex)
             // let ref:any;
             let mp:Map<string,number> = new Map<string, number>()
@@ -1145,7 +1199,7 @@ class StarGrid extends React.Component<any, State>{
                             if(land && land.counter && land.counter.counterId !="0"){
                             }else{
                                 if (!isEmptyPlanet(land) && tHex.counter.enType != land.enType) {
-                                    if (land.marker == account.addresses[chain]) {
+                                    if (land.marker == owner) {
                                         power = 1;
                                     } else {
                                         power = 2 + new BigNumber(land.level).toNumber()
@@ -1266,12 +1320,19 @@ class StarGrid extends React.Component<any, State>{
         interVarEpoch.latestOpTime = Date.now();
     }
 
-    setShowToast(f:boolean,m?:string){
-        this.setState({
+    setShowToast(f:boolean,m?:string,color?:string,loading?:boolean){
+        if(!color){
+            color="danger";
+        }
+        const s = {
             showToast:f,
             toastMessage:m,
-            showLoading:false
-        })
+            toastColor:color
+        };
+        if(!loading){
+           s["showLoading"]=false;
+        }
+        this.setState(s)
         interVarEpoch.latestOpTime = Date.now();
     }
 
@@ -1312,25 +1373,28 @@ class StarGrid extends React.Component<any, State>{
         }
     }
 
-    setShowPlanetModal = async (f:boolean,type:number = 2) =>{
+    setShowPlanetModal = async (f:boolean,type?:number) =>{
+        let {owner,planetTab} = this.state;
+        if(type){
+            planetTab = type == 1 ?"owner":"marker"
+        }
         let arr:Array<Land> = [];
         if(f){
-            const account = await walletWorker.accountInfo();
             //TODO pagination
-            arr = await starGridRpc.myPlanet(account.addresses[ChainType.BSC],type,0,0,500);
+            arr = await starGridRpc.myPlanet(owner,type,0,0,500);
         }
         this.setState({
             showMyPlanetModal:f,
             showLoading:false,
             myPlanetArr:arr,
-            planetTab:type == 1 ?"owner":"marker"
+            planetTab:planetTab
         })
     }
 
     setShowUserDeposit = async (f:boolean) =>{
+        const {owner} = this.state;
         if(f){
-            const account = await walletWorker.accountInfo();
-            const arr = await starGridRpc.userDeposit(account.addresses[ChainType.BSC],0,500);
+            const arr = await starGridRpc.userDeposit(owner,0,500);
             this.setState({
                 showLoading:false,
                 showUserDeposit:f,
@@ -1345,25 +1409,30 @@ class StarGrid extends React.Component<any, State>{
     }
 
     confirm = async (hash: string) => {
-        let intervalId: any = 0;
-        this.setShowLoading(true);
-        intervalId = setInterval(() => {
-            // rpc.getTxInfo(chain, hash).then(rest => {
-            //     if (rest) {
-            //         clearInterval(intervalId)
-            //
-            //         interVarEpoch.latestOpTime = Date.now();
-            //         this.setShowLoading(false);
-            //         this.setState({
-            //             targetHex:[],
-            //             btnRef:""
-            //         })
-            //     }
-            // }).catch((e: any) => {
-            //     this.setShowLoading(false);
-            //     console.error(e);
-            // })
-        }, 1000)
+        return new Promise((resolve, reject) => {
+            this.setShowLoading(true);
+            this.metaMaskReq("eth_getTransactionReceipt",[hash]).then(rest => {
+                if (rest) {
+                    interVarEpoch.latestOpTime = Date.now();
+                    this.setShowLoading(false);
+                    this.getBalanceAsync().then(balance=>{
+                        this.setState({
+                            targetHex:[],
+                            btnRef:"",
+                            balanceMap:balance
+                        })
+                    })
+                    resolve(true)
+                }else{
+                    setTimeout(()=>{
+                        this.confirm(hash);
+                    },1000)
+                }
+            }).catch((e: any) => {
+                this.setShowLoading(false);
+                reject(e)
+            })
+        })
     }
 
     convertHex = (hex:Hex):Hex =>{
@@ -1387,9 +1456,9 @@ class StarGrid extends React.Component<any, State>{
             amountTitle2:"",
             amountTitle1:"",
         };
+        const {owner} = this.state;
         if(f){
-            const account = await walletWorker.accountInfo();
-            const driver = await starGridRpc.driverInfo(account.addresses[chain])
+            const driver = await starGridRpc.driverInfo(owner)
             state["driver"] = driver;
         }
         this.setState(state)
@@ -1460,10 +1529,10 @@ class StarGrid extends React.Component<any, State>{
     }
 
     setShowApproveList = async (f:boolean) =>{
+        const {owner} = this.state;
         let ret:StarGridTrustInfo|undefined;
         if(f){
-            const account = await walletWorker.accountInfo();
-            ret =  await starGridRpc.myApproved(account.addresses[chain],0,500);
+            ret =  await starGridRpc.myApproved(owner,0,500);
         }
         this.setState({
             showApprovedList:f,
@@ -1474,11 +1543,11 @@ class StarGrid extends React.Component<any, State>{
 
     selectCounter = async (counter:Counter) =>{
         const {lockedInfo} = this.state;
-        const account = await walletWorker.accountInfo()
+        const {owner} = this.state;
 
         if(counter.enType == StarGridType.EARTH){
             const planetInfo = lockedInfo.userInfo.userDefaultEarthCoordinate != "0"?
-                await epochStarGridQuery.planetInfo(lockedInfo.userInfo.userDefaultEarthCoordinate,account.addresses[ChainType.BSC]):undefined;
+                await epochStarGridQuery.planetInfo(lockedInfo.userInfo.userDefaultEarthCoordinate,owner):undefined;
             this.setState({
                 amountTitle1: this.renTitle("bDARK"),
                 amountTitle2: this.renTitle("WATER"),
@@ -1486,7 +1555,7 @@ class StarGrid extends React.Component<any, State>{
             })
         }else if(counter.enType == StarGridType.WATER){
             const planetInfo = lockedInfo.userInfo.userDefaultWaterCoordinate != "0"?
-                await epochStarGridQuery.planetInfo(lockedInfo.userInfo.userDefaultWaterCoordinate,account.addresses[ChainType.BSC]):undefined;
+                await epochStarGridQuery.planetInfo(lockedInfo.userInfo.userDefaultWaterCoordinate,owner):undefined;
 
             this.setState({
                 amountTitle1: this.renTitle("bLIGHT"),
@@ -1517,18 +1586,47 @@ class StarGrid extends React.Component<any, State>{
         return false;
     }
 
+    setShowSelectAccount = (f:boolean) =>{
+        this.setState({
+            showSettlementModal:false,
+            showSelectAccount:f
+        })
+    }
+
+    selectAccount = (ptype:number) =>{
+        this.setState({
+            showSelectAccount:false
+        })
+        if(ptype == 2){
+            accountService = new MetaMaskAccount();
+            selfStorage.setItem("serviceType",ptype)
+            //@ts-ignore
+            this.getOwnerAddress().then((owner)=>{
+                this.setShowToast(true,`Selected address ${owner}`,"success")
+                this.setState({
+                    owner:owner,
+                    targetHex:[],
+                })
+                this.enterInit();
+                this.init();
+            }).catch(e=>{
+                const err = typeof e == "string"?e:e.message;
+                this.setShowToast(true,err);
+            });
+        }
+    }
+
     render() {
         const {hexSize,targetHex,userPositions,txs,showApproveAllModal,approvedStarGridState,driver,
-            showPosition,approvedStarGrid,showModalApprove,showLoading,showConfirm,recRange,showCounterAdd,
-            showToast,toastMessage,tx,counters,account,showCaptureModal,feeData,feeOk,feeCancel,
-            lockedInfo,showSettlementModal,showPrepareModal,activeBottom,activeLeft,planetTab,
+            showPosition,approvedStarGrid,showModalApprove,showLoading,recRange,showCounterAdd,
+            showToast,toastMessage,tx,counters,owner,showCaptureModal,feeData,feeOk,feeCancel,showSelectAccount,
+            lockedInfo,showSettlementModal,showPrepareModal,activeBottom,activeLeft,planetTab,toastColor,
             showPowerDistribution,amountTitle1,amountTitle2,myPlanetArr,showMyPlanetModal,showApprovedList,approvedInfo,
         showDetailModal,lockedUserInfo,showSelectPlanetModal,defaultPlanet,lockedUserAddress,enDetails,showUserDeposit,
         userDepositArr,counterSelectData,showCounterSelectModal,withdrawUserDeposit} = this.state;
         // const hexagons = gridGenerator.rectangle(recRange[0],recRange[1], true,true );
         // console.log(hexagons,recRange);
         const hexagons = gridGenerator.hexagon(recRange[0]>recRange[1]?recRange[0]:recRange[1],true)
-        const owner = account && account.addresses[chain];
 
         const calcPlanetRest = this.calcPlanetMap();
         const reachHexesGlobal:any = calcPlanetRest[0];
@@ -1548,13 +1646,17 @@ class StarGrid extends React.Component<any, State>{
                 <IonPage>
                     <IonHeader mode="ios">
                         <IonToolbar mode="ios" color="primary">
-                            <IonIcon src={chevronBack} slot="start" size="large" onClick={()=>{url.back()}}/>
+                            {/*<IonIcon src={chevronBack} slot="start" size="large" onClick={()=>{url.back()}}/>*/}
+                            <img src="./assets/icon/icon.png" width="40"/>
                             <IonTitle>
-                                <IonLabel>STAR GRID [{lockedInfo && lockedInfo.currentPeriod}]</IonLabel>
+                                <IonLabel>STAR GRID [{lockedInfo && lockedInfo.currentPeriod}]<IonIcon/></IonLabel>
                                 <div>{periodCountdown>0 && <CountDown time={periodCountdown} className="period-countdown"/>}</div>
                             </IonTitle>
                             <IonLabel slot="end">
-                                <IonIcon src={cashOutline} onClick={()=>{this.setShowSettlementModal(true)}} size="large"/>
+                                <div style={{display:"flex",alignItems:"center"}}>
+                                    <IonText>{utils.ellipsisStr(owner,5,3,4)}</IonText>
+                                    <IonIcon src={personCircleOutline} size="large" onClick={()=>{this.setShowSettlementModal(true)}} />
+                                </div>
                             </IonLabel>
                         </IonToolbar>
                     </IonHeader>
@@ -1826,7 +1928,10 @@ class StarGrid extends React.Component<any, State>{
                                             return <IonItem key={i}>
                                                 <IonLabel color="primary">{v}<IonText color="secondary"> [BEP20]</IonText></IonLabel>
                                                 <IonText color="success">{approvedStarGridState[v]?i18n.t("approved"):<IonButton size="small" color="primary" onClick={()=>{
-                                                    this.approveToStarGridProxy(v,config.CONTRACT_ADDRESS.EPOCH.BSC.SAFE_HOLDER).catch(e=>{
+                                                    this.setShowLoading(true)
+                                                    this.approveToStarGridProxy(v,config.CONTRACT_ADDRESS.EPOCH.BSC.SAFE_HOLDER).then(()=>{
+                                                        this.setShowLoading(false)
+                                                    }).catch(e=>{
                                                         const err = typeof e == "string"?e:e.message;
                                                         this.setShowToast(true,err)
                                                         console.error(e)
@@ -1838,7 +1943,10 @@ class StarGrid extends React.Component<any, State>{
                                     <IonItem>
                                         <IonLabel color="primary">COUNTER <IonText color="secondary">[BEP721]</IonText></IonLabel>
                                         <IonText color="success">{approvedStarGrid?"APPROVED":<IonButton size="small" color="primary" onClick={()=>{
-                                            this.approveToStarGrid().catch(e=>{
+                                            this.setShowLoading(true)
+                                            this.approveToStarGrid().then(()=>{
+                                                this.setShowLoading(false)
+                                            }).catch(e=>{
                                                 const err = typeof e == "string"?e:e.message;
                                                 this.setShowToast(true,err)
                                                 console.error(e)
@@ -1857,7 +1965,10 @@ class StarGrid extends React.Component<any, State>{
                                 </IonCol>
                                 <IonCol size="8">
                                     <IonButton expand="block" onClick={()=>{
-                                        this.approveAll().catch(e=>{
+                                        this.setShowLoading(true);
+                                        this.approveAll().then(()=>{
+                                            this.setShowLoading(false)
+                                        }).catch(e=>{
                                             const err = typeof e == "string"?e:e.message;
                                             this.setShowToast(true,err)
                                             console.log(e)
@@ -1953,7 +2064,7 @@ class StarGrid extends React.Component<any, State>{
                                                 return <IonItem key={i}>
                                                     <IonLabel className="ion-text-wrap">
                                                         <IonRow>
-                                                            <IonCol size="9"><small>{i18n.t("approveTo")} <IonText color="secondary">[{v.to}]</IonText></small></IonCol>
+                                                            <IonCol size="9"><small>{i18n.t("approveTo")}{v.cy && <IonText color="primary">({v.cy})</IonText>}<IonText color="secondary">[{v.to}]</IonText></small></IonCol>
                                                             <IonCol size="3">{new BigNumber(v.gas).toString(10)}</IonCol>
                                                         </IonRow>
                                                     </IonLabel>
@@ -2011,7 +2122,7 @@ class StarGrid extends React.Component<any, State>{
                         </IonModal>
 
                         <IonToast
-                            color={"danger"}
+                            color={toastColor?toastColor:"danger"}
                             position="top"
                             isOpen={showToast}
                             onDidDismiss={() => this.setShowToast(false)}
@@ -2031,7 +2142,7 @@ class StarGrid extends React.Component<any, State>{
                             duration={120000}
                         />
 
-                        <CounterList title={i18n.t("login")} driverInfo={driver} lockedInfo={lockedInfo} defaultPlanet={defaultPlanet}  onSelectPlanet={()=>{
+                        <CounterList key="s" title={i18n.t("login")} driverInfo={driver} lockedInfo={lockedInfo} defaultPlanet={defaultPlanet}  onSelectPlanet={()=>{
                             this.setShowSelectPlanet(true,"capture");
                         }} show={showCaptureModal} amountTitle1={amountTitle1}
                                      amountTitle2={amountTitle2} onCallback={(counter)=>{
@@ -2090,7 +2201,9 @@ class StarGrid extends React.Component<any, State>{
                         }} amountTitle1={amountTitle1} amountTitle2={amountTitle2}/>
                         <FeeModal show={!!feeData} lockedInfo={lockedInfo} onOk={()=>{ feeOk() }} onCancel={()=>{ feeCancel() }} data={feeData}/>
 
-                        {lockedInfo && <Settlement title="Economy" enDetails={enDetails} show={showSettlementModal} isOwner={true} lockedInfo={lockedInfo} onPrepare={()=>{
+                        {lockedInfo && <Settlement title="Economy" enDetails={enDetails} show={showSettlementModal} isOwner={true} address={owner} onShowSelectAccount={()=>{
+                            this.setShowSelectAccount(true);
+                        }} lockedInfo={lockedInfo} onPrepare={()=>{
                             this.setShowLoading(true)
                             this.setShowPrepareModal(true).catch(e=>{
                                 const err = typeof e == "string"?e:e.message;
@@ -2160,8 +2273,10 @@ class StarGrid extends React.Component<any, State>{
 
                         <PlanetList title={i18n.t("myPlanet")} lockedInfo={lockedInfo} tab={planetTab} show={showMyPlanetModal} onTabChange={tab=>{
                             // queryType[0-marker,1-owner,2-maker&owner]
-                            const tp = tab == "owner"?1:0;
-                            this.setShowPlanetModal(true,tp);
+                            if(showMyPlanetModal){
+                                const tp = tab == "owner"?1:0;
+                                this.setShowPlanetModal(true,tp);
+                            }
                         }} onCancel={()=>{
                             this.setShowPlanetModal(false);
                         }} onOk={(land)=>{
@@ -2251,6 +2366,8 @@ class StarGrid extends React.Component<any, State>{
                                 this.setShowToast(true,err);
                             })
                         }} data={counterSelectData}/>
+
+                        <SelectAccount isOpen={showSelectAccount} onOk={this.selectAccount} onCancel={()=>this.setShowSelectAccount(false)}/>
                     </IonContent>
                 </IonPage>
             </>

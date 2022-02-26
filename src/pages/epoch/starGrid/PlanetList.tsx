@@ -48,7 +48,11 @@ export const PlanetList:React.FC<Props> = ({show,tab,title,onCancel,ownerData,lo
                     {
                         onTabChange &&
                         <IonItemDivider sticky>
-                            <IonSegment mode="ios" color="primary" value={tab} onIonChange={(e)=>onTabChange(e.detail.value)}>
+                            <IonSegment mode="ios" color="primary" value={tab} onIonChange={(e)=>{
+                                if(show){
+                                    onTabChange(e.detail.value)
+                                }
+                            }}>
                                 <IonSegmentButton value="owner">{i18n.t("owned")}</IonSegmentButton>
                                 <IonSegmentButton value="marker">{i18n.t("marked")}</IonSegmentButton>
                             </IonSegment>
@@ -82,7 +86,11 @@ export const PlanetList:React.FC<Props> = ({show,tab,title,onCancel,ownerData,lo
             </div>
             <IonRow>
                 <IonCol>
-                    <IonButton mode="ios" onClick={() => onCancel()} expand="block" fill="outline" color="secondary">{i18n.t("close")}</IonButton>
+                    <IonButton mode="ios" onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation();
+                        onCancel()
+                    }} expand="block" fill="outline" color="secondary">{i18n.t("close")}</IonButton>
                 </IonCol>
             </IonRow>
         </IonModal>

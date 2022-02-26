@@ -32,8 +32,6 @@ import zh_TW from './zh_TW.json';
 import be_BY from './be_BY.json';
 
 import {initReactI18next} from 'react-i18next';
-import {Plugins} from "@capacitor/core";
-
 let lang = localStorage.getItem("language");
 if (!lang) {
     lang = "en_US";
@@ -84,53 +82,53 @@ i18n.use(LanguageDetector)
         interpolation: {
             escapeValue: false,
         },
-    }).catch(e=>{
+    }).catch((e:any)=>{
     console.error(e)
 });
 
 i18n.changeLanguage(lang).then(()=>{
-}).catch(e=>{
+}).catch((e:any)=>{
     console.error(e)
 })
-
-Plugins.Device.getLanguageCode().then(d=>{
-    let langCode = d.value;
-    if(langCode.toLowerCase().indexOf("de")>-1){
-        langCode = "de_DE"
-    }else if(langCode.toLowerCase().indexOf("en")>-1){
-        langCode = "en_US"
-    }else if(langCode.toLowerCase().indexOf("be")>-1){
-        langCode = "be_BY"
-    }else if(langCode.toLowerCase().indexOf("es")>-1){
-        langCode = "es_ES"
-    }else if(langCode.toLowerCase().indexOf("fr")>-1){
-        langCode = "fr_FR"
-    }else if(langCode.toLowerCase().indexOf("it")>-1){
-        langCode = "it_IT"
-    }else if(langCode.toLowerCase().indexOf("ja")>-1){
-        langCode = "ja_JP"
-    }else if(langCode.toLowerCase().indexOf("ko")>-1){
-        langCode = "ko_KR"
-    }else if(langCode.toLowerCase().indexOf("nl")>-1){
-        langCode = "nl_NL"
-    }else if(langCode.toLowerCase().indexOf("pt")>-1){
-        langCode = "pt_BR"
-    }else if(langCode.toLowerCase().indexOf("zh")>-1){
-        langCode = "zh_TW"
-    }else{
-        langCode = "en_US"
-    }
-    let lang = localStorage.getItem("language");
-    if(!lang){
-        lang = langCode;
-        localStorage.setItem("language", lang);
-    }
-    i18n.changeLanguage(lang,()=>{
-        console.log("change language")
-    }).catch(e=>{
-        console.error(e)
-    })
-})
-
+//
+// Plugins.Device.getLanguageCode().then((d:any)=>{
+//     let langCode = d.value;
+//     if(langCode.toLowerCase().indexOf("de")>-1){
+//         langCode = "de_DE"
+//     }else if(langCode.toLowerCase().indexOf("en")>-1){
+//         langCode = "en_US"
+//     }else if(langCode.toLowerCase().indexOf("be")>-1){
+//         langCode = "be_BY"
+//     }else if(langCode.toLowerCase().indexOf("es")>-1){
+//         langCode = "es_ES"
+//     }else if(langCode.toLowerCase().indexOf("fr")>-1){
+//         langCode = "fr_FR"
+//     }else if(langCode.toLowerCase().indexOf("it")>-1){
+//         langCode = "it_IT"
+//     }else if(langCode.toLowerCase().indexOf("ja")>-1){
+//         langCode = "ja_JP"
+//     }else if(langCode.toLowerCase().indexOf("ko")>-1){
+//         langCode = "ko_KR"
+//     }else if(langCode.toLowerCase().indexOf("nl")>-1){
+//         langCode = "nl_NL"
+//     }else if(langCode.toLowerCase().indexOf("pt")>-1){
+//         langCode = "pt_BR"
+//     }else if(langCode.toLowerCase().indexOf("zh")>-1){
+//         langCode = "zh_TW"
+//     }else{
+//         langCode = "en_US"
+//     }
+//     let lang:any = localStorage.getItem("language");
+//     if(!lang){
+//         lang = langCode;
+//         localStorage.setItem("language", lang);
+//     }
+//     i18n.changeLanguage(lang,()=>{
+//         console.log("change language")
+//     }).catch((e:any)=>{
+//         console.error(e)
+//     })
+// })
+//
 
 export default i18n;

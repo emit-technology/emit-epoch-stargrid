@@ -32,12 +32,14 @@ import {
 import {Attribute, ChainId, ChainType, DeviceMode, GasPriceLevel, MetaInfo, NftInfo} from "../types";
 import rpc from "../rpc";
 import * as utils from "../utils"
-import selfStorage from "./storage";
 
-export function ellipsisStr(v: string,num?:number) {
+export function ellipsisStr(v: string,num?:number,left?:number,right?:number) {
     if (!v) return ""
     if(!num){
         num = 7
+    }
+    if(left && right){
+        return v.slice(0,left) + "..."+v.slice(v.length-right,v.length);
     }
     if (v.length >= 15) {
         return v.slice(0, num) + " ... " + v.slice(v.length - num, v.length);

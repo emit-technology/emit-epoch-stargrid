@@ -4,8 +4,8 @@ import {
     IonLabel,
     IonItem,
     IonModal,
-    IonButton,IonListHeader,
-    IonCol, IonRow, IonAvatar,IonCheckbox,IonRadio, IonSegment, IonItemDivider,IonText,IonSegmentButton
+    IonButton, IonListHeader,
+    IonCol, IonRow, IonAvatar, IonCheckbox, IonRadio, IonSegment, IonItemDivider, IonText, IonSegmentButton, IonIcon
 } from "@ionic/react"
 import {ENDetails, GlobalInfo, LockedInfo, PeriodUserNE, StarGridType} from "../../../types";
 import * as utils from "../../../utils";
@@ -18,6 +18,7 @@ import {NoData} from "./NoData";
 import {isEmptyCounter} from "./utils";
 import HexInfoCard from "./hex-info";
 import i18n from "../../../locales/i18n";
+import {swapHorizontal} from "ionicons/icons";
 
 interface Props{
     title?:string
@@ -27,7 +28,9 @@ interface Props{
     onPrepare?:()=>void;
     lockedInfo:LockedInfo;
     isOwner?:boolean;
-    enDetails?:ENDetails
+    enDetails?:ENDetails;
+    address?:string;
+    onShowSelectAccount?:()=>void;
 }
 interface TokenBurned {
     user:BigNumber
@@ -172,7 +175,7 @@ export class Settlement extends React.Component<Props, any> {
 
 
     render() {
-        const {show,onOk,onCancel,onPrepare,title,lockedInfo} = this.props;
+        const {show,onOk,onCancel,onPrepare,title,lockedInfo,address,onShowSelectAccount} = this.props;
         const {tab} = this.state;
 
 
@@ -197,6 +200,13 @@ export class Settlement extends React.Component<Props, any> {
                     <IonList>
                         {title && <IonListHeader mode="ios">{title}</IonListHeader>}
                         <IonItemDivider mode="md"/>
+                        <IonItemDivider sticky color="primary">Account</IonItemDivider>
+                        <IonItem lines="none">
+                            <IonLabel>{utils.ellipsisStr(address,7)}</IonLabel>
+                            <IonButton size="small" expand="block" fill="outline" onClick={()=>{
+                                onShowSelectAccount();
+                            }}><IonIcon size="small" src={swapHorizontal}/>Switch</IonButton>
+                        </IonItem>
                         <IonItemDivider sticky color="primary">COUNTER {i18n.t("info")}</IonItemDivider>
                         <IonItem lines="none">
                             <IonLabel>

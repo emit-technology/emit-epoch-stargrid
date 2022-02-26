@@ -154,7 +154,6 @@ class Url {
 
     accountUnlock() {
         if (process.env.NODE_ENV == "development"){
-            walletWorker.unlockWallet("12345678")
         }else{
             this.goTo([this.base, this.account.unlock].join("/"), "");
         }

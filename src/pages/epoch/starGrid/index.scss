@@ -518,3 +518,55 @@ svg path {
 //  border-bottom-left-radius: 100px;
 //  border-bottom-right-radius: 100px;
 //}
+
+
+.epoch-modal{
+  --width: 90%;
+  --height: 80%;
+  --border-radius: 15px;
+  --background:#fff;
+  overflow-y: scroll;
+  --max-width: 600px;
+  //opacity: 0.9;
+}
+.epoch-md{
+  max-height: 85vh;
+  overflow: scroll;
+  padding-bottom: 80px;
+}
+.epoch-md .close{
+  float: right;
+  padding: 10px 12px 75px;
+  //width: 100%;
+}
+.btn-bottom{
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  padding: 5px;
+  background: #fff;
+}
+
+.font-weight-800{
+  font-weight: 800;
+}
+
+.modal-header{
+  font-size: 24px;
+  font-weight: 800;
+  text-align: center;
+  padding: 12px
+}
+
+.modal-select-account{
+  --height: 10%;
+  --width: 90vw;
+  --border-radius: 15px;
+}
+
+.select-account-btn {
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+}
