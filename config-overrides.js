@@ -1,5 +1,7 @@
-const webpack = require('webpack')
+const webpack = require('webpack');
+const path = require("path");
 module.exports = function override(config, env) {
+    // config.output.path = path.join(__dirname,"docs");
     //do stuff with the webpack config...
     let loaders = config.resolve
     loaders.fallback = {
