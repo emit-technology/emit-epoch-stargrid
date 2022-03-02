@@ -22,7 +22,7 @@ export interface IAccount {
 
     onChainChanged: (cb: Function) => void;
 
-    jsonRpc: (method: string, params: Array<any>) => Promise<any>;
+    jsonRpc: (method: string, params: any) => Promise<any>;
 }
 
 export class MetaMaskAccount implements IAccount{
@@ -87,13 +87,15 @@ export class MetaMaskAccount implements IAccount{
         return !!provider;
     }
 
-    jsonRpc = async (method: string, params: Array<any>): Promise<any> => {
+    jsonRpc = async (method: string, params: any): Promise<any> => {
         //@ts-ignore
-        return await ethereum
+        const rest = await ethereum
             .request({
                 method: method,
                 params,
             })
+        console.log(rest,"rest::")
+        return rest;
     }
 }
 

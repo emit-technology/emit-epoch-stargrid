@@ -47,7 +47,7 @@ import {
 } from '@ionic/react';
 import {
     add,
-    addCircleOutline,
+    addCircleOutline, alertCircle,
     arrowBackCircleOutline,
     arrowDownCircleOutline,
     arrowForwardCircleOutline,
@@ -105,9 +105,9 @@ import {CounterSelectModal} from "./CounterSelectModal";
 import {isEmptyPlanet} from "./utils";
 import i18n from "../../../locales/i18n";
 import {CountDown} from "../../../components/countdown";
-import {Plugins} from "@capacitor/core";
 import SelectAccount from "./SelectAccount";
 import {AccountInfo, IAccount, MetaMaskAccount} from "../../../account";
+import {WatchTokens} from "./WatchToken";
 
 interface ApproveState{
     bLIGHT:boolean
@@ -119,6 +119,7 @@ interface ApproveState{
     BUSD:boolean
 }
 
+
 interface State{
     hexSize:number
     targetHex:Array<HexInfo>
@@ -126,7 +127,6 @@ interface State{
     recRange:Array<number>
     rangeLand:Array<Land>
     approvedStarGridState:ApproveState
-    approvedOperatorState:ApproveState
     approvedStarGrid:boolean
     showModalApprove:boolean
     showLoading:boolean
@@ -188,7 +188,10 @@ interface State{
     metamaskProvider?:any
     owner: string;
 
-    showSelectAccount: boolean
+    showSelectAccount: boolean,
+
+    watchedTokens?: ApproveState,
+    showWatchTokenModal:boolean
 }
 export const yellowColors = ["e8dda7","e8dda6","e8dca5","e7dca4","e7dba3","e7dba2","e6daa1","e6d99f","e5d99e","e5d89c","e4d79b","e4d799","e4d698","e3d696","e3d595","e3d594","e3d593","e3d492","e2d492","e2d391","e2d390","e2d290","e2d290","e2d190","e1d190","e1d090","e0d090","e0cf91","dfcf91","dfce92","decd92","decd93","ddcc93","dccb94","dccb94","dbca95","dac995","d9c896","d9c896","d8c796","d7c696","d7c596","d6c596","d6c496","d5c396","d5c396","d4c296","d4c295","d3c195","d3c194","d3c094","d2c093","d2bf93","d2bf92","d1be92","d1be91","d0bd91","d0bd90","d0bc90","cfbc8f","cfbb8f","cfbb8f","cebb8e","ceba8e","cdba8d","cdb98d","cdb98c","ccb98c","ccb88b","ccb88b","ccb78a","cbb78a","cbb789","cbb689","cbb688","cab588","cab587","cab487","c9b486","c9b386","c8b285","c8b285","c7b184","c7b184","c7b083","c6af82","c6af81","c5ae81","c5ad80","c5ad80","c5ac7f","c5ac7e","c5ab7e","c5ab7d","c5aa7d","c5aa7d","c5a97c","c5a97c","c5a87b","c5a87b","c5a87b","c5a77b","c5a77b","c5a67a","c5a67a","c5a67a","c5a679","c5a579","c5a578","c6a578","c6a578","c7a577","c7a577","c8a576","c8a476","c9a475","c9a475","caa474","caa373","caa373","cba372","cba272","cba271","cba171","cba170","cba06f","cba06e","ca9f6e","ca9e6d","ca9e6c","ca9d6b","c99c6b","c99b6a","c99a69","c89969","c89868","c89767","c79667","c79566","c69465","c59364","c59264","c49163","c39062","c28f61","c18e61","c08c60","be8b5f","bd8a5f","bc895e","bb885d","ba875d","b8855c","b7845c","b6835b","b4825b","b3815a","b1805a","b07f5a","ae7e59","ad7d59","ab7c59","aa7b58","a87a58","a77957","a57857","a37857","a27757","a07657","9e7557","9d7557","9b7457","9a7357","997357","977256","967156","957055","946f55","926f54","916e54","906c53","8f6b53","8e6a52","8c6952","8b6851","8a6750","886650","87654f","86644e","84634e","83624d","82614c","80604c","7f5f4b","7e5e4a","7c5d4a","7b5c49","7a5b48","795a48","785a47","775946","765846","755745","745745","745644","735644","735543","725543","725442","725442","725341","725341","725240","725240","72513f","72513f","73503e","734f3d","734f3d","744e3c","744d3b","754d3a","754c3a","754b39","764a38","764937","764936","764835","764735","764634","754633","754532","744432","734431","724331","714230","704230","6f412f","6e412f","6d402e","6b3f2e","6a3f2d","693e2c","683d2c","673d2b","663c2a","653b2a","653b29","643a28","633a28","633927","623926","623826","613725","613725","613724"];
 export const blueColors = ["c4cadc","c4cadb","c3c9db","c2c9da","c1c8da","c1c8da","c0c7d9","bec7d9","bdc6d9","bcc6d9","bbc5d9","b9c5d9","b8c4d9","b6c4d9","b5c3d9","b3c3d9","b2c2d9","b0c2d9","afc1d9","adc1d9","acc0d9","aac0d9","a9bfd9","a8bed9","a6bed9","a5bdd9","a4bdd9","a3bcd9","a2bbd9","a0bbd9","9fbad9","9ebad9","9dbad9","9bb9d9","9ab9d9","99b8d9","97b8d9","96b8d9","94b7d8","93b7d8","92b7d8","90b7d8","8fb7d8","8eb6d8","8db6d8","8bb5d8","8ab5d8","89b4d8","88b4d8","87b3d8","86b3d8","85b3d8","84b2d8","83b2d8","82b1d8","80b1d8","7fb0d8","7eb0d8","7dafd8","7cafd8","7baed8","7aaed8","78add8","77add8","76add8","74acd8","73acd8","72acd9","71abd9","70abd9","6fabd9","6eabd9","6dabd9","6caad9","6baad9","6aa9d9","69a9d8","69a9d8","68a8d8","67a8d8","66a7d8","65a7d8","65a7d8","64a6d8","63a6d8","62a6d8","61a5d8","60a5d8","5fa5d8","5ea4d8","5ea4d8","5da4d8","5ca4d8","5ca4d8","5ba3d8","5aa3d8","5aa2d8","59a2d8","58a2d8","58a1d8","57a1d8","56a0d8","56a0d8","55a0d8","549fd8","549fd8","539fd8","529ed8","519ed8","519ed8","509ed8","4f9ed8","4f9dd8","4e9dd8","4e9dd8","4d9cd8","4d9cd8","4c9bd8","4c9bd8","4b9bd8","4b9ad8","4b9ad8","4a9ad8","4a99d8","4999d8","4999d8","4998d8","4898d8","4797d8","4797d8","4696d8","4696d8","4596d8","4496d8","4495d8","4395d8","4394d8","4294d8","4293d8","4293d8","4192d8","4191d8","4091d8","3f90d8","3f8fd8","3e8ed8","3e8dd8","3d8cd8","3c8bd8","3c8ad8","3b89d8","3a88d8","3a86d8","3985d8","3884d8","3782d8","3781d8","367fd8","357dd8","357bd8","3479d8","3377d8","3375d8","3273d8","3270d8","316ed8","316cd8","306bd8","2f69d8","2f67d9","2e66d9","2e64d9","2d62d9","2d61d9","2c60d9","2c5fd9","2c5ed9","2b5dd9","2b5cd9","2b5bd9","2b5ad9","2a5ad9","2a59d9","2a58d9","2958d9","2957d9","2957d9","2956d9","2856d9","2856d9","2855d9","2855d8","2754d8","2754d8","2754d8","2753d8","2653d8","2653d8","2652d8","2652d8","2552d8","2551d8","2551d8","2550d8","2450d8","244fd8","244fd8","244ed8","234ed8","234dd8","234dd8","224dd8","224cd8","224cd8","224cd8","214bd8","214bd8","214bd8","214bd8","204ad8","204ad8","204ad8","1f49d8","1f49d8","1e48d8","1e48d8","1d47d8","1d47d8","1c47d8","1c46d8","1b46d8","1b45d8","1b45d8","1a45d8","1a44d8","1944d8","1944d8","1843d8","1843d8","1743d8","1742d8","1642d8","1642d8","1542d8","1542d8","1441d8","1441d8","1341d8","1341d8","1240d8","1140d8","1140d8","1040d8","0f40d8","0f40d8","0e40d8"];
@@ -217,9 +220,6 @@ class StarGrid extends React.Component<any, State>{
         rangeLand:[],
         approvedStarGridState:{
             bLIGHT:false,WATER:false,EARTH:false,bDARK:false,"EARTH-BUSD-LP":false,"WATER-BUSD-LP":false,BUSD:false,
-        },
-        approvedOperatorState:{
-            bLIGHT:false,WATER:false,EARTH:false,bDARK:false,"EARTH-BUSD-LP":false,"WATER-BUSD-LP":false,BUSD:false
         },
         approvedStarGrid:false,
         showConfirm:false,
@@ -250,8 +250,9 @@ class StarGrid extends React.Component<any, State>{
         showUserDeposit:false,
         showCounterSelectModal:false,
         counterSelectData:[],
-        owner:selfStorage.getItem("owner"),
-        showSelectAccount: false
+        owner:selfStorage.getItem("owner")["address"],
+        showSelectAccount: false,
+        showWatchTokenModal: false,
     }
     componentDidMount() {
         const ptype = selfStorage.getItem("serviceType");
@@ -266,6 +267,24 @@ class StarGrid extends React.Component<any, State>{
                 console.error(e)
             })
         },5*1000,true)
+
+        if(!accountService){
+            return
+        }
+
+        accountService.onAccountChanged((accounts:Array<AccountInfo>)=>{
+            this.handleAccountsChanged(accounts)
+        });
+
+        accountService.onChainChanged((chainId) => {
+            // Handle the new chain.
+            // Correctly handling chain changes can be complicated.
+            // We recommend reloading the page unless you have good reason not to.
+            if(chainId != 56){
+                this.setShowToast(true,"Please switch to BSC Network in the MetaMask !")
+                return;
+            }
+        });
 
         this.enterInit().catch(e=>{
             const err = typeof e == "string"?e:e.message;
@@ -283,39 +302,53 @@ class StarGrid extends React.Component<any, State>{
         return false;
     }
 
-    enterInit = async ()=>{
-        if(!accountService){
-            return
+    enterInit = async (own?:string)=>{
+        // await this.registerToken();
+
+        let {showApproveAllModal,approvedStarGridState,approvedStarGrid,owner} = this.state;
+        if(own){
+            owner = own;
         }
+        if(!owner){
+            owner = await this.getOwnerAddress();
+        }
+        if(!owner){
+            return;
+        }
+        const sKey = `added_token_${owner}`;
+        let cacheTokens = selfStorage.getItem(sKey);
 
-        accountService.onAccountChanged((accounts:Array<AccountInfo>)=>{
-            this.handleAccountsChanged(accounts)
-            this.enterInit().catch(e=>{
-                console.error(e)
-            })
-        });
-
-        accountService.onChainChanged((chainId) => {
-            // Handle the new chain.
-            // Correctly handling chain changes can be complicated.
-            // We recommend reloading the page unless you have good reason not to.
-            if(chainId != 56){
-                this.setShowToast(true,"Please switch to BSC Network in the MetaMask !")
-                return;
+        const watchedToken:ApproveState = {
+            bLIGHT:false,
+            bDARK:false,
+            WATER:false,
+            EARTH:false,
+            BUSD:false,
+            "EARTH-BUSD-LP":false,
+            "WATER-BUSD-LP":false
+        }
+        if(!cacheTokens){
+            cacheTokens = watchedToken;
+        }
+        let uflag = false;
+        const skeys = Object.keys(cacheTokens);
+        for(let sy of skeys){
+            if(!cacheTokens[sy]){
+                uflag = true
+            }else{
+                watchedToken[sy] = cacheTokens[sy];
             }
-        });
-
-        const {showApproveAllModal,approvedStarGridState,approvedStarGrid} = this.state;
-        const owner = await this.getOwnerAddress();
+        }
 
         let approveRest:Array<any> = [approvedStarGrid,approvedStarGridState,false];
         if(!showApproveAllModal){
             approveRest = await this.queryApprove(owner);
         }
+        console.log("approveRest",approveRest);
         this.setState({
             approvedStarGrid:approveRest[0],
             approvedStarGridState:approveRest[1],
-            showModalApprove:approveRest[2],
+            watchedTokens:watchedToken
         })
     }
 
@@ -340,19 +373,53 @@ class StarGrid extends React.Component<any, State>{
                 owner: accounts[0].address,
                 showLoading:true
             })
-            this.init();
-            this.enterInit().then(()=>{
+            this.init(accounts[0].address).catch(e=>{
+                const err = typeof e == "string"?e:e.message;
+                this.setShowToast(true,err)
+            });
+            this.enterInit(accounts[0].address).then(()=>{
                 this.setShowLoading(false);
             }).catch(e=>{
                 this.setShowLoading(false);
+                const err = typeof e == "string"?e:e.message;
+                this.setShowToast(true,err)
             });
+
             // Do any other work!
         }
     }
 
-    init = async ()=>{
-        let {absoluteHex,hexSize,owner,balanceMap} = this.state;
+    registerToken = async (token:string) =>{
+        const {owner,watchedTokens} = this.state;
+        const address = CONTRACT_ADDRESS.ERC20.BSC[token];
+        let symbol = token;
+        if(symbol == "WATER-BUSD-LP"){
+            symbol = "WATER-LP";
+        }else if(symbol == "EARTH-BUSD-LP"){
+            symbol = "EARTH-LP";
+        }
+        const params = {
+            type: "ERC20",
+            options: {
+                address: address,
+                symbol: symbol,
+                decimals: 18,
+                image: `${window.location.origin}/assets/tokens/${token}.png`,
+            }
+        }
+        const rest = await accountService.jsonRpc("wallet_watchAsset",params)
+        watchedTokens[token]=!!rest;
+        selfStorage.setItem(`added_token_${owner}`,watchedTokens);
+        this.setState({
+            watchedTokens:watchedTokens
+        })
+    }
 
+    init = async (own?:string)=>{
+        let {absoluteHex,hexSize,owner,balanceMap} = this.state;
+        if(own){
+            owner = own;
+        }
         if(!owner || !accountService){
             this.setShowSelectAccount(true)
             return;
@@ -445,24 +512,26 @@ class StarGrid extends React.Component<any, State>{
 
     queryApprove = async (own?:string)=>{
         try{
-            const {approvedStarGridState,owner} = this.state;
-            if(!own){
-                own = owner
+            let {approvedStarGridState,owner} = this.state;
+            if(own){
+               owner = own;
             }
             const keys = Object.keys(approvedStarGridState);
             let approved = true;
             for(let cy of keys){
                 const token: EthToken = new EthToken(config.CONTRACT_ADDRESS.ERC20.BSC[cy], chain);
                 {
-                    const rest: any = await token.allowance(own, config.CONTRACT_ADDRESS.EPOCH.BSC.SAFE_HOLDER);
+                    const rest: any = await token.allowance(owner, config.CONTRACT_ADDRESS.EPOCH.BSC.SAFE_HOLDER);
                     const allowance = utils.fromValue(rest, utils.getCyDecimal(cy, ChainType[chain])).toNumber();
                     if(allowance>0){
                         approvedStarGridState[cy]=true
+                    }else{
+                        approvedStarGridState[cy]=false
                     }
                 }
             }
             const contract: Erc721 = new Erc721(config.CONTRACT_ADDRESS.ERC721.COUNTER.ADDRESS.BSC,chain);
-            const approveAll = await contract.isApprovedForAll(own,config.CONTRACT_ADDRESS.EPOCH.BSC.SAFE_HOLDER)
+            const approveAll = await contract.isApprovedForAll(owner,config.CONTRACT_ADDRESS.EPOCH.BSC.SAFE_HOLDER)
             for(let cy of keys){
                 if(!approvedStarGridState[cy]){
                     approved = false
@@ -470,11 +539,24 @@ class StarGrid extends React.Component<any, State>{
                 }
             }
 
-            return [approveAll,approvedStarGridState,!approved || !approveAll]
+            return [approveAll,approvedStarGridState]
         }catch (e){
             console.error(e)
             return Promise.reject("Query Error")
         }
+    }
+
+    isApproved = ()=>{
+        const {approvedStarGridState,approvedStarGrid} = this.state;
+        const keys = Object.keys(approvedStarGridState);
+        let approved = true;
+        for(let cy of keys){
+            if(!approvedStarGridState[cy]){
+                approved = false
+                break;
+            }
+        }
+        return approved && approvedStarGrid
     }
 
     genTx = async (contract:EthContract,data:string) =>{
@@ -524,14 +606,14 @@ class StarGrid extends React.Component<any, State>{
         const tx = await this.genApproveTx(cy,spender);
         const hash = await this.sendTx(tx);
         await this.confirm(hash)
-        await this.queryApprove();
+        await this.enterInit();
         interVarEpoch.latestOpTime = Date.now();
     }
     approveToStarGrid = async ()=>{
         const tx = await this.genApproveTx();
         const hash = await this.sendTx(tx);
         await this.confirm(hash)
-        await this.queryApprove();
+        await this.enterInit();
         interVarEpoch.latestOpTime = Date.now();
     }
 
@@ -565,7 +647,7 @@ class StarGrid extends React.Component<any, State>{
             const hash = await this.sendTx(tx);
             await this.waitHash(hash)
             this.setShowToast(true,`Approved to ${tx.cy?tx.cy:tx.to} successfully !`,"success",true)
-            await this.queryApprove()
+            await this.enterInit()
         }
         return Promise.resolve();
     }
@@ -1616,6 +1698,25 @@ class StarGrid extends React.Component<any, State>{
         }
     }
 
+    hashNoWatched = () =>{
+        const {watchedTokens} = this.state;
+        if(watchedTokens){
+            const keys = Object.keys(watchedTokens);
+            for(let key of keys){
+                if(!watchedTokens[key]){
+                    return true;
+                }
+            }
+        }
+        return false
+    }
+
+    setShowWatchTokenModal = (f:boolean)=>{
+        this.setState({
+            showWatchTokenModal:f
+        })
+    }
+
     render() {
         const {hexSize,targetHex,userPositions,txs,showApproveAllModal,approvedStarGridState,driver,
             showPosition,approvedStarGrid,showModalApprove,showLoading,recRange,showCounterAdd,
@@ -1623,7 +1724,7 @@ class StarGrid extends React.Component<any, State>{
             lockedInfo,showSettlementModal,showPrepareModal,activeBottom,activeLeft,planetTab,toastColor,
             showPowerDistribution,amountTitle1,amountTitle2,myPlanetArr,showMyPlanetModal,showApprovedList,approvedInfo,
         showDetailModal,lockedUserInfo,showSelectPlanetModal,defaultPlanet,lockedUserAddress,enDetails,showUserDeposit,
-        userDepositArr,counterSelectData,showCounterSelectModal,withdrawUserDeposit} = this.state;
+        userDepositArr,counterSelectData,showCounterSelectModal,withdrawUserDeposit,watchedTokens,showWatchTokenModal} = this.state;
         // const hexagons = gridGenerator.rectangle(recRange[0],recRange[1], true,true );
         // console.log(hexagons,recRange);
         const hexagons = gridGenerator.hexagon(recRange[0]>recRange[1]?recRange[0]:recRange[1],true)
@@ -1647,9 +1748,12 @@ class StarGrid extends React.Component<any, State>{
                     <IonHeader mode="ios">
                         <IonToolbar mode="ios" color="primary">
                             {/*<IonIcon src={chevronBack} slot="start" size="large" onClick={()=>{url.back()}}/>*/}
-                            <img src="./assets/icon/icon.png" width="40"/>
+                            <IonLabel>
+                                <img src="./assets/icon/icon.png" width="40"/>
+                            </IonLabel>
                             <IonTitle>
-                                <IonLabel>STAR GRID [{lockedInfo && lockedInfo.currentPeriod}]<IonIcon/></IonLabel>
+                                <IonLabel>STAR GRID [{lockedInfo && lockedInfo.currentPeriod}]
+                                </IonLabel>
                                 <div>{periodCountdown>0 && <CountDown time={periodCountdown} className="period-countdown"/>}</div>
                             </IonTitle>
                             <IonLabel slot="end">
@@ -1778,6 +1882,36 @@ class StarGrid extends React.Component<any, State>{
                                     this.setShowPowerDistribution(true)
                                 }}
                                 />
+                            </div>
+                        }
+
+                        {
+                            (!this.isApproved() || this.hashNoWatched()) && watchedTokens  &&
+                            <div style={{position:"absolute",transform:"translateX(-50%)",left:"50%",zIndex:1000}}>
+                                {
+                                    !this.isApproved() &&
+                                    <IonRow>
+                                        <IonCol size="12">
+                                            <IonButton color="primary" expand="block" onClick={()=>{
+                                                this.enterInit();
+                                                this.setShowModalApprove(true)
+                                            }}><IonIcon icon={alertCircle} color="warning" size="large"/>Approve tokens</IonButton>
+                                        </IonCol>
+                                    </IonRow>
+                                }
+                                {
+                                    this.hashNoWatched() &&
+                                    <IonRow>
+                                        <IonCol size="12">
+                                            <IonButton color="primary" expand="block" onClick={()=>{
+                                                if(this.hashNoWatched()){
+                                                    this.setShowWatchTokenModal(true)
+                                                }}
+                                            }><IonIcon icon={alertCircle} color="warning" size="large"/>Register tokens</IonButton>
+                                        </IonCol>
+                                    </IonRow>
+                                }
+
                             </div>
                         }
 
@@ -1912,6 +2046,16 @@ class StarGrid extends React.Component<any, State>{
                             {/*</Draggable>*/}
                         </div>
 
+                        {
+                            watchedTokens && <WatchTokens title={"Registering Tokens"} show={showWatchTokenModal  } onCancel={()=>{
+                                this.setShowWatchTokenModal(false)
+                            }} onOk={(token)=>{
+                                this.registerToken(token).catch(e=>{
+                                    const err = typeof e == "string"?e:e.message;
+                                    this.setShowToast(true,err);
+                                });
+                            }} data={watchedTokens}/>
+                        }
                         <IonModal
                             mode="ios"
                             isOpen={showModalApprove}
