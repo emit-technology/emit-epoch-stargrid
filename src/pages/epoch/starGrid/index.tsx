@@ -250,7 +250,7 @@ class StarGrid extends React.Component<any, State>{
         showUserDeposit:false,
         showCounterSelectModal:false,
         counterSelectData:[],
-        owner:selfStorage.getItem("owner")["address"],
+        owner:selfStorage.getItem("owner")?selfStorage.getItem("owner")["address"]:"",
         showSelectAccount: false,
         showWatchTokenModal: false,
     }
