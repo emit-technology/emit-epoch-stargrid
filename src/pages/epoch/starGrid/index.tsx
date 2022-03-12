@@ -1711,6 +1711,10 @@ class StarGrid extends React.Component<any, State>{
         return false
     }
 
+    isApp = ()=>{
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    }
     setShowWatchTokenModal = (f:boolean)=>{
         this.setState({
             showWatchTokenModal:f
@@ -1900,7 +1904,7 @@ class StarGrid extends React.Component<any, State>{
                                     </IonRow>
                                 }
                                 {
-                                    this.hashNoWatched() &&
+                                    this.hashNoWatched() && !this.isApp() &&
                                     <IonRow>
                                         <IonCol size="12">
                                             <IonButton color="primary" expand="block" onClick={()=>{

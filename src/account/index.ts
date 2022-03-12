@@ -1,4 +1,5 @@
 import detectEthereumProvider from "@metamask/detect-provider";
+const ethereum= window.ethereum;
 export enum ChainId{
     _,
     ETH,
@@ -89,8 +90,7 @@ export class MetaMaskAccount implements IAccount{
 
     jsonRpc = async (method: string, params: any): Promise<any> => {
         //@ts-ignore
-        const rest = await ethereum
-            .request({
+        const rest = await ethereum.request({
                 method: method,
                 params,
             })
