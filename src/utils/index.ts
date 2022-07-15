@@ -447,3 +447,20 @@ export function nFormatter(n: number | BigNumber | string | undefined, digits: n
     }
     return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
 }
+
+export function calcLandRate(landLevel:string){
+    return Math.ceil(new BigNumber(landLevel).multipliedBy(256).dividedBy(25).toNumber())
+    // if(!landCap){
+    //     return 0
+    // }
+    // const base = new BigNumber(0.391);
+    // const cap = fromValue(landCap,18);
+    // const num = base.minus(
+    //     new BigNumber(((cap.multipliedBy(2).toNumber())**0.455)).dividedBy(cap)
+    // ).dividedBy(base).multipliedBy(1000).toNumber();
+    // if(num<0){
+    //     return 0
+    // }
+    // console.log("cal land rate >>> ",landCap,Math.ceil(num));
+    // return Math.ceil(num)
+}

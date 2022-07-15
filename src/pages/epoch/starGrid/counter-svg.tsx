@@ -3,9 +3,10 @@ import {Counter, Land, StarGridType} from "../../../types";
 import {calcCounterRgb, ORIENTATIONS_CONSTS, OrientationsEnum, rgbToHex} from "../../../components/hexagons/utils";
 import {calculateCoordinates, HexGrid} from "../../../components/hexagons";
 import * as utils from "../../../utils";
-import {blueColors, yellowColors} from "./index";
+
 import BigNumber from "bignumber.js";
 import {STAR_GRID_DEFAULT_LEVEL} from "../../../config";
+import {blueColors, yellowColors} from "../../../config/colors";
 
 interface Props {
     counter?:Counter
@@ -45,7 +46,7 @@ class CounterSvg extends React.Component<Props, any>{
         let blues = [];
         let yellows = [];
         if(land){
-            const i = Math.floor(utils.fromValue(land.capacity,18).toNumber())
+            const i = utils.calcLandRate(land.level)// Math.floor(utils.fromValue(land.capacity,18).toNumber())
             if(land.enType == StarGridType.WATER){
                 landStyle = blueColors[i]
                 blues.push(landStyle)

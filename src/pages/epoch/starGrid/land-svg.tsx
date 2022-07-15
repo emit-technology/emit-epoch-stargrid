@@ -3,7 +3,7 @@ import {Counter, Land, StarGridType} from "../../../types";
 import {calcCounterRgb, ORIENTATIONS_CONSTS, OrientationsEnum, rgbToHex} from "../../../components/hexagons/utils";
 import {calculateCoordinates, HexGrid} from "../../../components/hexagons";
 import * as utils from "../../../utils";
-import {blueColors, yellowColors} from "./index";
+import {blueColors, yellowColors} from "../../../config/colors";
 
 interface Props {
     land?:Land
@@ -18,7 +18,7 @@ class LandSvg extends React.Component<Props, any>{
         const hexSize = 40;
         let landStyle = ""
         if(land){
-            const i = Math.floor(utils.fromValue(land.capacity,18).toNumber())
+            const i = utils.calcLandRate(land.level)
             if(land.enType == StarGridType.WATER){
                 landStyle = blueColors[i]
             }else if(land.enType == StarGridType.EARTH){
