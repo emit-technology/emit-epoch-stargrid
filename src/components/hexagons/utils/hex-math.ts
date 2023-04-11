@@ -183,7 +183,7 @@ export function testHexGrids(){
   // const b = new Hex(1,0, -1 );
   // console.log(distanceBetweenHexes(center,axialCoordinatesToCube(65539,-65538)))
   // const id = toUINT256(axialCoordinatesToCube(65536,-65536))
-  const hex = toAxial(new BigNumber(8589082611).toString(10));
+  const hex = toAxial(new BigNumber(8590262271).toString(10));
   const hex2 = toAxial(new BigNumber(5636153).toString(10));
   const hex3 = toAxial(new BigNumber(5636239).toString(10));
   console.log(hex,hex2,hex3,"tessssss",toOpCode([1,2,3,4],4))

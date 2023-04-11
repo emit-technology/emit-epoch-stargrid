@@ -449,7 +449,8 @@ export function nFormatter(n: number | BigNumber | string | undefined, digits: n
 }
 
 export function calcLandRate(landLevel:string){
-    return Math.ceil(new BigNumber(landLevel).multipliedBy(256).dividedBy(25).toNumber())
+    const l = Math.ceil(new BigNumber(landLevel).multipliedBy(256).dividedBy(25).toNumber())
+    return l > 255?255:l
     // if(!landCap){
     //     return 0
     // }

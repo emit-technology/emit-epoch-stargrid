@@ -16,7 +16,7 @@ import {
     OrientationsEnum,
     PathCustom,
     reachableHexes,
-    reachableHexesNeighbor,
+    reachableHexesNeighbor, testHexGrids,
     toAxial,
     toOpCode,
     toUINT256
@@ -206,6 +206,8 @@ class StarGrid extends React.Component<any, State>{
 
     constructor(props: any) {
         super(props);
+
+        // testHexGrids()
     }
 
     position:any = {
